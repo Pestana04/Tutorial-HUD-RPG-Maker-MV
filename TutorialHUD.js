@@ -1,5 +1,5 @@
 /*:
- * @plugindesc v0.1.0 - HUD interativa para o tutorial do projeto Missão UAI.
+ * @plugindesc v0.1.1 - HUD interativa para o tutorial do projeto Missão UAI.
  * @author Gustavo Pestana
  *
  * @param Largura
@@ -46,7 +46,7 @@
  *
  * HUD interativa criada para o tutorial do projeto Missão UAI.
  *
- * Coloque este plugin ABAIXO de:
+ * Ordem recomendada:
  *
  * Galv_QuestLog
  * MissaoHUD
@@ -84,6 +84,19 @@
  *    Encerra e oculta a HUD.
  *
  * ============================================================================
+ * CHANGELOG
+ * ============================================================================
+ *
+ * v0.1.1
+ * - Ao rastrear a Quest Exemplo, o objetivo "Abra as Missões"
+ *   também é marcado automaticamente como concluído.
+ * - Integração com MissaoHUD.silentComplete().
+ * - Quest Exemplo pode ser concluída sem exibir o banner central.
+ *
+ * v0.1.0
+ * - Primeira versão.
+ *
+ * ============================================================================
  */
 
 var Imported = Imported || {};
@@ -95,16 +108,23 @@ var TutorialHUD = TutorialHUD || {};
 
     "use strict";
 
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // PARÂMETROS
-    // -------------------------------------------------------------------------
+    // ========================================================================
 
     var params = PluginManager.parameters('TutorialHUD');
 
-    TutorialHUD.width = Number(params['Largura'] || 360);
-    TutorialHUD.height = Number(params['Altura'] || 190);
-    TutorialHUD.margin = Number(params['Margem'] || 12);
-    TutorialHUD.backgroundOpacity = Number(params['OpacidadeFundo'] || 190);
+    TutorialHUD.width =
+        Number(params['Largura'] || 360);
+
+    TutorialHUD.height =
+        Number(params['Altura'] || 190);
+
+    TutorialHUD.margin =
+        Number(params['Margem'] || 12);
+
+    TutorialHUD.backgroundOpacity =
+        Number(params['OpacidadeFundo'] || 190);
 
     TutorialHUD.highlightColor =
         String(params['CorDestaque'] || '#D99A4E');
@@ -119,12 +139,13 @@ var TutorialHUD = TutorialHUD || {};
         String(params['IntegracaoQuestLog'] || 'true') === 'true';
 
 
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // GAME SYSTEM
-    // -------------------------------------------------------------------------
+    // ========================================================================
 
     var _TutorialHUD_GameSystem_initialize =
         Game_System.prototype.initialize;
+
 
     Game_System.prototype.initialize = function() {
 
@@ -139,46 +160,81 @@ var TutorialHUD = TutorialHUD || {};
         this._tutorialHudCustomText = '';
 
         this._tutorialLastTrackedQuest = 0;
+
     };
 
 
-    // -------------------------------------------------------------------------
-    // GARANTIR DADOS EM SAVES ANTIGOS
-    // -------------------------------------------------------------------------
+    // ========================================================================
+    // COMPATIBILIDADE COM SAVES ANTIGOS
+    // ========================================================================
 
     TutorialHUD.ensureData = function() {
 
-        if (!$gameSystem) return;
+        if (!$gameSystem) {
+            return;
+        }
 
-        if ($gameSystem._tutorialHudActive === undefined) {
+
+        if (
+            $gameSystem._tutorialHudActive === undefined
+        ) {
+
             $gameSystem._tutorialHudActive = false;
+
         }
 
-        if ($gameSystem._tutorialHudVisible === undefined) {
+
+        if (
+            $gameSystem._tutorialHudVisible === undefined
+        ) {
+
             $gameSystem._tutorialHudVisible = false;
+
         }
 
-        if (!$gameSystem._tutorialHudStep) {
-            $gameSystem._tutorialHudStep = 'movement';
+
+        if (
+            !$gameSystem._tutorialHudStep
+        ) {
+
+            $gameSystem._tutorialHudStep =
+                'movement';
+
         }
 
-        if ($gameSystem._tutorialHudCustomTitle === undefined) {
+
+        if (
+            $gameSystem._tutorialHudCustomTitle === undefined
+        ) {
+
             $gameSystem._tutorialHudCustomTitle = '';
+
         }
 
-        if ($gameSystem._tutorialHudCustomText === undefined) {
+
+        if (
+            $gameSystem._tutorialHudCustomText === undefined
+        ) {
+
             $gameSystem._tutorialHudCustomText = '';
+
         }
 
-        if ($gameSystem._tutorialLastTrackedQuest === undefined) {
+
+        if (
+            $gameSystem._tutorialLastTrackedQuest === undefined
+        ) {
+
             $gameSystem._tutorialLastTrackedQuest = 0;
+
         }
+
     };
 
 
-    // -------------------------------------------------------------------------
-    // API PÚBLICA
-    // -------------------------------------------------------------------------
+    // ========================================================================
+    // INICIAR
+    // ========================================================================
 
     TutorialHUD.start = function() {
 
@@ -186,392 +242,788 @@ var TutorialHUD = TutorialHUD || {};
 
         $gameSystem._tutorialHudActive = true;
         $gameSystem._tutorialHudVisible = true;
-        $gameSystem._tutorialHudStep = 'movement';
+
+        $gameSystem._tutorialHudStep =
+            'movement';
 
         $gameSystem._tutorialHudCustomTitle = '';
         $gameSystem._tutorialHudCustomText = '';
 
         TutorialHUD.refresh();
+
     };
 
+
+    // ========================================================================
+    // PREPARAR TUTORIAL
+    // ========================================================================
 
     TutorialHUD.prepare = function() {
 
         TutorialHUD.start();
 
-        if (!window.Galv ||
+
+        if (
+            !window.Galv ||
             !Galv.QUEST ||
-            typeof Galv.QUEST.activate !== 'function') {
+            typeof Galv.QUEST.activate !== 'function'
+        ) {
+
+            console.warn(
+                'TutorialHUD: Galv_QuestLog não encontrado.'
+            );
+
             return;
+
         }
 
-        var tutorialId = TutorialHUD.tutorialQuestId;
-        var exampleId = TutorialHUD.exampleQuestId;
 
-        // Ativa apenas as duas quests utilizadas no tutorial.
-        Galv.QUEST.activate(tutorialId);
-        Galv.QUEST.activate(exampleId);
+        var tutorialId =
+            TutorialHUD.tutorialQuestId;
 
-        // Quest 5 - Tutorial.
-        Galv.QUEST.objective(tutorialId, 0, 'activate');
+        var exampleId =
+            TutorialHUD.exampleQuestId;
 
-        for (var i = 1; i <= 7; i++) {
-            Galv.QUEST.objective(tutorialId, i, 'hide');
+
+        // --------------------------------------------------------------------
+        // ATIVAR AS DUAS MISSÕES UTILIZADAS NO TUTORIAL
+        // --------------------------------------------------------------------
+
+        Galv.QUEST.activate(
+            tutorialId,
+            true
+        );
+
+        Galv.QUEST.activate(
+            exampleId,
+            true
+        );
+
+
+        // --------------------------------------------------------------------
+        // QUEST 5 - CONCLUA O TUTORIAL
+        // --------------------------------------------------------------------
+
+        Galv.QUEST.objective(
+            tutorialId,
+            0,
+            'activate',
+            true
+        );
+
+
+        for (
+            var i = 1;
+            i <= 7;
+            i++
+        ) {
+
+            Galv.QUEST.objective(
+                tutorialId,
+                i,
+                'hide',
+                true
+            );
+
         }
 
-        // Quest 6 - Exemplo.
-        Galv.QUEST.objective(exampleId, 0, 'activate');
 
-        // Tutorial começa sendo a missão rastreada.
-        Galv.QUEST.track(tutorialId);
+        // --------------------------------------------------------------------
+        // QUEST 6 - QUEST EXEMPLO
+        // --------------------------------------------------------------------
+
+        Galv.QUEST.objective(
+            exampleId,
+            0,
+            'activate',
+            true
+        );
+
+
+        // --------------------------------------------------------------------
+        // RASTREAR O TUTORIAL
+        // --------------------------------------------------------------------
+
+        Galv.QUEST.track(
+            tutorialId
+        );
+
     };
 
+
+    // ========================================================================
+    // MOSTRAR
+    // ========================================================================
 
     TutorialHUD.show = function() {
 
         TutorialHUD.ensureData();
 
-        $gameSystem._tutorialHudVisible = true;
+        $gameSystem._tutorialHudVisible =
+            true;
 
         TutorialHUD.refresh();
+
     };
 
+
+    // ========================================================================
+    // ESCONDER
+    // ========================================================================
 
     TutorialHUD.hide = function() {
 
         TutorialHUD.ensureData();
 
-        $gameSystem._tutorialHudVisible = false;
+        $gameSystem._tutorialHudVisible =
+            false;
 
         TutorialHUD.refresh();
+
     };
 
+
+    // ========================================================================
+    // ENCERRAR
+    // ========================================================================
 
     TutorialHUD.end = function() {
 
         TutorialHUD.ensureData();
 
-        $gameSystem._tutorialHudActive = false;
-        $gameSystem._tutorialHudVisible = false;
+        $gameSystem._tutorialHudActive =
+            false;
+
+        $gameSystem._tutorialHudVisible =
+            false;
 
         TutorialHUD.refresh();
+
     };
 
+
+    // ========================================================================
+    // ALTERAR ETAPA
+    // ========================================================================
 
     TutorialHUD.step = function(step) {
 
         TutorialHUD.ensureData();
 
-        $gameSystem._tutorialHudStep = String(step);
+        $gameSystem._tutorialHudStep =
+            String(step);
 
-        $gameSystem._tutorialHudCustomTitle = '';
-        $gameSystem._tutorialHudCustomText = '';
+        $gameSystem._tutorialHudCustomTitle =
+            '';
+
+        $gameSystem._tutorialHudCustomText =
+            '';
 
         TutorialHUD.refresh();
+
     };
 
 
-    TutorialHUD.setText = function(title, text) {
+    // ========================================================================
+    // TEXTO PERSONALIZADO
+    // ========================================================================
+
+    TutorialHUD.setText = function(
+        title,
+        text
+    ) {
 
         TutorialHUD.ensureData();
 
-        $gameSystem._tutorialHudCustomTitle = String(title || '');
-        $gameSystem._tutorialHudCustomText = String(text || '');
+        $gameSystem._tutorialHudCustomTitle =
+            String(title || '');
+
+        $gameSystem._tutorialHudCustomText =
+            String(text || '');
 
         TutorialHUD.refresh();
+
     };
 
+
+    // ========================================================================
+    // ÚLTIMA QUEST RASTREADA
+    // ========================================================================
 
     TutorialHUD.lastTrackedQuest = function() {
 
         TutorialHUD.ensureData();
 
-        return Number($gameSystem._tutorialLastTrackedQuest || 0);
+        return Number(
+            $gameSystem._tutorialLastTrackedQuest || 0
+        );
+
     };
 
+
+    // ========================================================================
+    // REFRESH
+    // ========================================================================
 
     TutorialHUD.refresh = function() {
 
-        if (SceneManager._scene &&
-            SceneManager._scene._tutorialHudWindow) {
+        if (
+            SceneManager._scene &&
+            SceneManager._scene._tutorialHudWindow
+        ) {
 
-            SceneManager._scene._tutorialHudWindow.refresh();
+            SceneManager._scene
+                ._tutorialHudWindow
+                .refresh();
+
         }
+
     };
 
 
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // TEXTOS DAS ETAPAS
-    // -------------------------------------------------------------------------
+    // ========================================================================
 
     TutorialHUD.stepData = function(step) {
 
         switch (step) {
 
             case 'movement':
+
                 return {
-                    title: 'MOVIMENTAÇÃO',
-                    text: 'Use as teclas indicadas para se movimentar.'
+
+                    title:
+                        'MOVIMENTAÇÃO',
+
+                    text:
+                        'Use as teclas indicadas para se movimentar.'
+
                 };
+
 
             case 'run':
+
                 return {
-                    title: 'CORRER',
-                    text: 'Segure SHIFT enquanto se movimenta.'
+
+                    title:
+                        'CORRER',
+
+                    text:
+                        'Segure SHIFT enquanto se movimenta.'
+
                 };
+
 
             case 'interact':
+
                 return {
-                    title: 'INTERAÇÃO',
-                    text: 'Fique de frente para o objeto e interaja.'
+
+                    title:
+                        'INTERAÇÃO',
+
+                    text:
+                        'Fique de frente para o objeto e interaja.'
+
                 };
+
 
             case 'menu':
+
                 return {
-                    title: 'MENU',
-                    text: 'Abra o menu do jogo.'
+
+                    title:
+                        'MENU',
+
+                    text:
+                        'Abra o menu do jogo.'
+
                 };
+
 
             case 'quests':
+
                 return {
-                    title: 'MISSÕES',
-                    text: 'Abra o Diário de Missões pelo menu.'
+
+                    title:
+                        'MISSÕES',
+
+                    text:
+                        'Abra o Diário de Missões pelo menu.'
+
                 };
+
 
             case 'trackExample':
+
                 return {
-                    title: 'RASTREAR MISSÃO',
-                    text: 'Rastreie a missão "Quest Exemplo".'
+
+                    title:
+                        'RASTREAR MISSÃO',
+
+                    text:
+                        'Rastreie a missão "Quest Exemplo".'
+
                 };
+
 
             case 'trackTutorial':
+
                 return {
-                    title: 'RASTREAR MISSÃO',
-                    text: 'Volte a rastrear "Conclua o Tutorial".'
+
+                    title:
+                        'RASTREAR MISSÃO',
+
+                    text:
+                        'Volte a rastrear "Conclua o Tutorial".'
+
                 };
+
 
             case 'finish':
+
                 return {
-                    title: 'TUTORIAL',
-                    text: 'Muito bem! Você concluiu as etapas.'
+
+                    title:
+                        'TUTORIAL',
+
+                    text:
+                        'Muito bem! Você concluiu as etapas.'
+
                 };
 
+
             default:
+
                 return {
-                    title: 'TUTORIAL',
-                    text: ''
+
+                    title:
+                        'TUTORIAL',
+
+                    text:
+                        ''
+
                 };
+
         }
+
     };
 
 
-    // -------------------------------------------------------------------------
-    // JANELA DO TUTORIAL
-    // -------------------------------------------------------------------------
+    // ========================================================================
+    // WINDOW TUTORIAL HUD
+    // ========================================================================
 
     function Window_TutorialHUD() {
-        this.initialize.apply(this, arguments);
+
+        this.initialize.apply(
+            this,
+            arguments
+        );
+
     }
 
+
     Window_TutorialHUD.prototype =
-        Object.create(Window_Base.prototype);
+        Object.create(
+            Window_Base.prototype
+        );
+
 
     Window_TutorialHUD.prototype.constructor =
         Window_TutorialHUD;
 
 
-    Window_TutorialHUD.prototype.initialize = function() {
+    // ========================================================================
+    // INITIALIZE
+    // ========================================================================
 
-        var x = TutorialHUD.margin;
-        var y = TutorialHUD.margin;
+    Window_TutorialHUD.prototype.initialize =
+        function() {
 
-        Window_Base.prototype.initialize.call(
-            this,
-            x,
-            y,
-            TutorialHUD.width,
-            TutorialHUD.height
-        );
+            var x =
+                TutorialHUD.margin;
 
-        this.opacity = 0;
-        this.backOpacity = 0;
-
-        this._lastInputSignature = '';
-
-        this.refresh();
-    };
+            var y =
+                TutorialHUD.margin;
 
 
-    Window_TutorialHUD.prototype.update = function() {
+            Window_Base.prototype.initialize.call(
+                this,
+                x,
+                y,
+                TutorialHUD.width,
+                TutorialHUD.height
+            );
 
-        Window_Base.prototype.update.call(this);
 
-        TutorialHUD.ensureData();
+            this.opacity = 0;
+            this.backOpacity = 0;
 
-        this.visible =
-            $gameSystem._tutorialHudActive &&
-            $gameSystem._tutorialHudVisible;
+            this._lastInputSignature =
+                '';
 
-        if (!this.visible) return;
-
-        var signature = this.inputSignature();
-
-        if (signature !== this._lastInputSignature) {
-
-            this._lastInputSignature = signature;
             this.refresh();
-        }
-    };
+
+        };
 
 
-    Window_TutorialHUD.prototype.inputSignature = function() {
+    // ========================================================================
+    // UPDATE
+    // ========================================================================
 
-        return [
-            Input.isPressed('up'),
-            Input.isPressed('down'),
-            Input.isPressed('left'),
-            Input.isPressed('right'),
-            Input.isPressed('shift'),
-            Input.isPressed('ok'),
-            Input.isPressed('cancel'),
-            $gameSystem._tutorialHudStep
-        ].join('|');
-    };
+    Window_TutorialHUD.prototype.update =
+        function() {
+
+            Window_Base.prototype.update.call(
+                this
+            );
 
 
-    Window_TutorialHUD.prototype.refresh = function() {
-
-        if (!this.contents) return;
-
-        this.contents.clear();
-
-        TutorialHUD.ensureData();
-
-        this.visible =
-            $gameSystem._tutorialHudActive &&
-            $gameSystem._tutorialHudVisible;
-
-        if (!this.visible) return;
-
-        this.drawBackground();
-
-        var step = $gameSystem._tutorialHudStep;
-
-        var data = TutorialHUD.stepData(step);
-
-        var title =
-            $gameSystem._tutorialHudCustomTitle || data.title;
-
-        var text =
-            $gameSystem._tutorialHudCustomText || data.text;
-
-        this.drawHeader(title);
-        this.drawInstruction(text);
-        this.drawControls(step);
-    };
+            TutorialHUD.ensureData();
 
 
-    Window_TutorialHUD.prototype.drawBackground = function() {
-
-        var w = this.contents.width;
-        var h = this.contents.height;
-
-        var alpha =
-            TutorialHUD.backgroundOpacity / 255;
-
-        var background =
-            'rgba(10,10,10,' + alpha + ')';
-
-        this.contents.fillRect(
-            0,
-            0,
-            w,
-            h,
-            background
-        );
-
-        var c = TutorialHUD.highlightColor;
-
-        this.contents.fillRect(0, 0, w, 2, c);
-        this.contents.fillRect(0, h - 2, w, 2, c);
-        this.contents.fillRect(0, 0, 2, h, c);
-        this.contents.fillRect(w - 2, 0, 2, h, c);
-    };
+            this.visible =
+                $gameSystem._tutorialHudActive &&
+                $gameSystem._tutorialHudVisible;
 
 
-    Window_TutorialHUD.prototype.drawHeader = function(title) {
-
-        this.contents.fontSize = 20;
-        this.changeTextColor(TutorialHUD.highlightColor);
-
-        this.drawText(
-            title,
-            12,
-            6,
-            this.contents.width - 24,
-            'left'
-        );
-
-        this.resetTextColor();
-
-        this.contents.fillRect(
-            12,
-            34,
-            this.contents.width - 24,
-            1,
-            TutorialHUD.highlightColor
-        );
-    };
+            if (!this.visible) {
+                return;
+            }
 
 
-    Window_TutorialHUD.prototype.drawInstruction = function(text) {
-
-        this.contents.fontSize = 16;
-        this.resetTextColor();
-
-        this.drawText(
-            text,
-            12,
-            40,
-            this.contents.width - 24,
-            'left'
-        );
-    };
+            var signature =
+                this.inputSignature();
 
 
-    // -------------------------------------------------------------------------
-    // DESENHO DOS BOTÕES
-    // -------------------------------------------------------------------------
+            if (
+                signature !==
+                this._lastInputSignature
+            ) {
+
+                this._lastInputSignature =
+                    signature;
+
+                this.refresh();
+
+            }
+
+        };
+
+
+    // ========================================================================
+    // INPUT SIGNATURE
+    // ========================================================================
+
+    Window_TutorialHUD.prototype.inputSignature =
+        function() {
+
+            return [
+
+                Input.isPressed('up'),
+                Input.isPressed('down'),
+                Input.isPressed('left'),
+                Input.isPressed('right'),
+                Input.isPressed('shift'),
+                Input.isPressed('ok'),
+                Input.isPressed('cancel'),
+
+                $gameSystem._tutorialHudStep
+
+            ].join('|');
+
+        };
+
+
+    // ========================================================================
+    // REFRESH WINDOW
+    // ========================================================================
+
+    Window_TutorialHUD.prototype.refresh =
+        function() {
+
+            if (!this.contents) {
+                return;
+            }
+
+
+            this.contents.clear();
+
+
+            TutorialHUD.ensureData();
+
+
+            this.visible =
+                $gameSystem._tutorialHudActive &&
+                $gameSystem._tutorialHudVisible;
+
+
+            if (!this.visible) {
+                return;
+            }
+
+
+            this.drawBackground();
+
+
+            var step =
+                $gameSystem._tutorialHudStep;
+
+
+            var data =
+                TutorialHUD.stepData(step);
+
+
+            var title =
+                $gameSystem._tutorialHudCustomTitle ||
+                data.title;
+
+
+            var text =
+                $gameSystem._tutorialHudCustomText ||
+                data.text;
+
+
+            this.drawHeader(
+                title
+            );
+
+
+            this.drawInstruction(
+                text
+            );
+
+
+            this.drawControls(
+                step
+            );
+
+        };
+
+
+    // ========================================================================
+    // FUNDO
+    // ========================================================================
+
+    Window_TutorialHUD.prototype.drawBackground =
+        function() {
+
+            var w =
+                this.contents.width;
+
+            var h =
+                this.contents.height;
+
+
+            var alpha =
+                TutorialHUD.backgroundOpacity /
+                255;
+
+
+            var background =
+                'rgba(10,10,10,' +
+                alpha +
+                ')';
+
+
+            this.contents.fillRect(
+                0,
+                0,
+                w,
+                h,
+                background
+            );
+
+
+            var color =
+                TutorialHUD.highlightColor;
+
+
+            this.contents.fillRect(
+                0,
+                0,
+                w,
+                2,
+                color
+            );
+
+
+            this.contents.fillRect(
+                0,
+                h - 2,
+                w,
+                2,
+                color
+            );
+
+
+            this.contents.fillRect(
+                0,
+                0,
+                2,
+                h,
+                color
+            );
+
+
+            this.contents.fillRect(
+                w - 2,
+                0,
+                2,
+                h,
+                color
+            );
+
+        };
+
+
+    // ========================================================================
+    // CABEÇALHO
+    // ========================================================================
+
+    Window_TutorialHUD.prototype.drawHeader =
+        function(title) {
+
+            this.contents.fontSize =
+                20;
+
+
+            this.changeTextColor(
+                TutorialHUD.highlightColor
+            );
+
+
+            this.drawText(
+                title,
+                12,
+                6,
+                this.contents.width - 24,
+                'left'
+            );
+
+
+            this.resetTextColor();
+
+
+            this.contents.fillRect(
+                12,
+                34,
+                this.contents.width - 24,
+                1,
+                TutorialHUD.highlightColor
+            );
+
+        };
+
+
+    // ========================================================================
+    // INSTRUÇÃO
+    // ========================================================================
+
+    Window_TutorialHUD.prototype.drawInstruction =
+        function(text) {
+
+            this.contents.fontSize =
+                16;
+
+
+            this.resetTextColor();
+
+
+            this.drawText(
+                text,
+                12,
+                40,
+                this.contents.width - 24,
+                'left'
+            );
+
+        };
+
+
+    // ========================================================================
+    // DESENHO DE TECLA
+    // ========================================================================
 
     Window_TutorialHUD.prototype.drawKey =
-        function(label, x, y, width, pressed) {
+        function(
+            label,
+            x,
+            y,
+            width,
+            pressed
+        ) {
 
-            var h = 34;
+            var height =
+                34;
 
-            var background = pressed
-                ? TutorialHUD.highlightColor
-                : '#282828';
 
-            var border = pressed
-                ? '#FFFFFF'
-                : '#777777';
+            var background =
+                pressed
+                    ? TutorialHUD.highlightColor
+                    : '#282828';
+
+
+            var border =
+                pressed
+                    ? '#FFFFFF'
+                    : '#777777';
+
 
             this.contents.fillRect(
                 x,
                 y,
                 width,
-                h,
+                height,
                 background
             );
 
-            this.contents.fillRect(x, y, width, 1, border);
-            this.contents.fillRect(x, y + h - 1, width, 1, border);
-            this.contents.fillRect(x, y, 1, h, border);
-            this.contents.fillRect(x + width - 1, y, 1, h, border);
 
-            this.contents.fontSize = 17;
+            this.contents.fillRect(
+                x,
+                y,
+                width,
+                1,
+                border
+            );
 
-            this.changeTextColor('#FFFFFF');
+
+            this.contents.fillRect(
+                x,
+                y + height - 1,
+                width,
+                1,
+                border
+            );
+
+
+            this.contents.fillRect(
+                x,
+                y,
+                1,
+                height,
+                border
+            );
+
+
+            this.contents.fillRect(
+                x + width - 1,
+                y,
+                1,
+                height,
+                border
+            );
+
+
+            this.contents.fontSize =
+                17;
+
+
+            this.changeTextColor(
+                '#FFFFFF'
+            );
+
 
             this.drawText(
                 label,
@@ -581,15 +1033,28 @@ var TutorialHUD = TutorialHUD || {};
                 'center'
             );
 
+
             this.resetTextColor();
+
         };
 
 
-    Window_TutorialHUD.prototype.drawMovementKeys =
-        function(baseX, baseY) {
+    // ========================================================================
+    // SETAS
+    // ========================================================================
 
-            var size = 42;
-            var gap = 5;
+    Window_TutorialHUD.prototype.drawMovementKeys =
+        function(
+            baseX,
+            baseY
+        ) {
+
+            var size =
+                42;
+
+            var gap =
+                5;
+
 
             this.drawKey(
                 '↑',
@@ -599,6 +1064,7 @@ var TutorialHUD = TutorialHUD || {};
                 Input.isPressed('up')
             );
 
+
             this.drawKey(
                 '←',
                 baseX,
@@ -606,6 +1072,7 @@ var TutorialHUD = TutorialHUD || {};
                 size,
                 Input.isPressed('left')
             );
+
 
             this.drawKey(
                 '↓',
@@ -615,6 +1082,7 @@ var TutorialHUD = TutorialHUD || {};
                 Input.isPressed('down')
             );
 
+
             this.drawKey(
                 '→',
                 baseX + (size + gap) * 2,
@@ -622,274 +1090,479 @@ var TutorialHUD = TutorialHUD || {};
                 size,
                 Input.isPressed('right')
             );
+
         };
 
 
-    Window_TutorialHUD.prototype.drawControls = function(step) {
+    // ========================================================================
+    // CONTROLES POR ETAPA
+    // ========================================================================
 
-        var y = 75;
+    Window_TutorialHUD.prototype.drawControls =
+        function(step) {
 
-        switch (step) {
-
-            case 'movement':
-
-                this.drawMovementKeys(90, y);
-                break;
-
-
-            case 'run':
-
-                this.drawKey(
-                    'SHIFT',
-                    25,
-                    y + 20,
-                    90,
-                    Input.isPressed('shift')
-                );
-
-                this.drawMovementKeys(155, y);
-                break;
+            var y =
+                75;
 
 
-            case 'interact':
+            switch (step) {
 
-                this.drawKey(
-                    'ENTER',
-                    18,
-                    y + 25,
-                    82,
-                    Input.isPressed('ok')
-                );
+                // ------------------------------------------------------------
+                // MOVIMENTAÇÃO
+                // ------------------------------------------------------------
 
-                this.drawKey(
-                    'ESPAÇO',
-                    110,
-                    y + 25,
-                    95,
-                    Input.isPressed('ok')
-                );
+                case 'movement':
 
-                this.drawKey(
-                    'Z',
-                    215,
-                    y + 25,
-                    50,
-                    Input.isPressed('ok')
-                );
+                    this.drawMovementKeys(
+                        90,
+                        y
+                    );
 
-                break;
+                    break;
 
 
-            case 'menu':
+                // ------------------------------------------------------------
+                // CORRIDA
+                // ------------------------------------------------------------
 
-                this.drawKey(
-                    'ESC',
-                    75,
-                    y + 25,
-                    82,
-                    Input.isPressed('cancel')
-                );
+                case 'run':
 
-                this.drawKey(
-                    'X',
-                    170,
-                    y + 25,
-                    60,
-                    Input.isPressed('cancel')
-                );
-
-                break;
+                    this.drawKey(
+                        'SHIFT',
+                        25,
+                        y + 20,
+                        90,
+                        Input.isPressed('shift')
+                    );
 
 
-            case 'quests':
+                    this.drawMovementKeys(
+                        155,
+                        y
+                    );
 
-                this.contents.fontSize = 18;
-
-                this.drawText(
-                    'MENU  →  MISSÕES',
-                    25,
-                    y + 30,
-                    this.contents.width - 50,
-                    'center'
-                );
-
-                break;
+                    break;
 
 
-            case 'trackExample':
-            case 'trackTutorial':
+                // ------------------------------------------------------------
+                // INTERAÇÃO
+                // ------------------------------------------------------------
 
-                this.contents.fontSize = 18;
+                case 'interact':
 
-                this.drawText(
-                    'Selecione a missão e escolha Rastrear',
-                    15,
-                    y + 20,
-                    this.contents.width - 30,
-                    'center'
-                );
-
-                break;
-
-
-            case 'finish':
-
-                this.contents.fontSize = 24;
-                this.changeTextColor(TutorialHUD.highlightColor);
-
-                this.drawText(
-                    '✓',
-                    0,
-                    y + 20,
-                    this.contents.width,
-                    'center'
-                );
-
-                this.resetTextColor();
-
-                break;
-        }
-    };
+                    this.drawKey(
+                        'ENTER',
+                        18,
+                        y + 25,
+                        82,
+                        Input.isPressed('ok')
+                    );
 
 
-    // -------------------------------------------------------------------------
+                    this.drawKey(
+                        'ESPAÇO',
+                        110,
+                        y + 25,
+                        95,
+                        Input.isPressed('ok')
+                    );
+
+
+                    this.drawKey(
+                        'Z',
+                        215,
+                        y + 25,
+                        50,
+                        Input.isPressed('ok')
+                    );
+
+                    break;
+
+
+                // ------------------------------------------------------------
+                // MENU
+                // ------------------------------------------------------------
+
+                case 'menu':
+
+                    this.drawKey(
+                        'ESC',
+                        75,
+                        y + 25,
+                        82,
+                        Input.isPressed('cancel')
+                    );
+
+
+                    this.drawKey(
+                        'X',
+                        170,
+                        y + 25,
+                        60,
+                        Input.isPressed('cancel')
+                    );
+
+                    break;
+
+
+                // ------------------------------------------------------------
+                // MISSÕES
+                // ------------------------------------------------------------
+
+                case 'quests':
+
+                    this.contents.fontSize =
+                        18;
+
+
+                    this.drawText(
+                        'MENU  →  MISSÕES',
+                        25,
+                        y + 30,
+                        this.contents.width - 50,
+                        'center'
+                    );
+
+                    break;
+
+
+                // ------------------------------------------------------------
+                // RASTREAMENTO
+                // ------------------------------------------------------------
+
+                case 'trackExample':
+                case 'trackTutorial':
+
+                    this.contents.fontSize =
+                        18;
+
+
+                    this.drawText(
+                        'Selecione a missão e escolha Rastrear',
+                        15,
+                        y + 20,
+                        this.contents.width - 30,
+                        'center'
+                    );
+
+                    break;
+
+
+                // ------------------------------------------------------------
+                // FINAL
+                // ------------------------------------------------------------
+
+                case 'finish':
+
+                    this.contents.fontSize =
+                        24;
+
+
+                    this.changeTextColor(
+                        TutorialHUD.highlightColor
+                    );
+
+
+                    this.drawText(
+                        '✓',
+                        0,
+                        y + 20,
+                        this.contents.width,
+                        'center'
+                    );
+
+
+                    this.resetTextColor();
+
+                    break;
+
+            }
+
+        };
+
+
+    // ========================================================================
     // ADICIONAR HUD AO MAPA
-    // -------------------------------------------------------------------------
+    // ========================================================================
 
     var _TutorialHUD_SceneMap_createAllWindows =
         Scene_Map.prototype.createAllWindows;
 
-    Scene_Map.prototype.createAllWindows = function() {
 
-        _TutorialHUD_SceneMap_createAllWindows.call(this);
+    Scene_Map.prototype.createAllWindows =
+        function() {
 
-        this._tutorialHudWindow =
-            new Window_TutorialHUD();
-
-        this.addWindow(this._tutorialHudWindow);
-    };
+            _TutorialHUD_SceneMap_createAllWindows.call(
+                this
+            );
 
 
-    // -------------------------------------------------------------------------
-    // INTEGRAÇÃO COM GALV QUEST LOG
-    // -------------------------------------------------------------------------
-
-    TutorialHUD._onQuestTracked = function(id) {
-
-        TutorialHUD.ensureData();
-
-        $gameSystem._tutorialLastTrackedQuest = id;
-
-        if (!$gameSystem._tutorialHudActive) return;
-        if (!TutorialHUD.questIntegration) return;
-
-        var tutorialId = TutorialHUD.tutorialQuestId;
-        var exampleId = TutorialHUD.exampleQuestId;
-
-        var step = $gameSystem._tutorialHudStep;
+            this._tutorialHudWindow =
+                new Window_TutorialHUD();
 
 
-        // ---------------------------------------------------------------------
-        // JOGADOR RASTREOU A QUEST EXEMPLO
-        // ---------------------------------------------------------------------
+            this.addWindow(
+                this._tutorialHudWindow
+            );
 
-        if (step === 'trackExample' && id === exampleId) {
+        };
 
-            if (window.Galv && Galv.QUEST) {
 
-                // Objetivo: Rastreie outra missão
-                Galv.QUEST.objective(
-                    tutorialId,
-                    5,
-                    'complete'
-                );
+    // ========================================================================
+    // QUEST RASTREADA
+    // ========================================================================
 
-                // Próximo objetivo:
-                // Rastreie o tutorial
-                Galv.QUEST.objective(
-                    tutorialId,
-                    6,
-                    'activate'
-                );
+    TutorialHUD._onQuestTracked =
+        function(id) {
 
-                // Quest exemplo cumpriu sua função.
-                Galv.QUEST.objective(
-                    exampleId,
-                    0,
-                    'complete'
-                );
+            TutorialHUD.ensureData();
 
-                if (typeof Galv.QUEST.complete === 'function') {
-                    Galv.QUEST.complete(exampleId);
+
+            $gameSystem._tutorialLastTrackedQuest =
+                id;
+
+
+            if (
+                !$gameSystem._tutorialHudActive
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !TutorialHUD.questIntegration
+            ) {
+
+                return;
+
+            }
+
+
+            var tutorialId =
+                TutorialHUD.tutorialQuestId;
+
+
+            var exampleId =
+                TutorialHUD.exampleQuestId;
+
+
+            var step =
+                $gameSystem._tutorialHudStep;
+
+
+            // =================================================================
+            // QUEST EXEMPLO RASTREADA
+            // =================================================================
+
+            if (
+                step === 'trackExample' &&
+                id === exampleId
+            ) {
+
+                if (
+                    window.Galv &&
+                    Galv.QUEST
+                ) {
+
+                    // ---------------------------------------------------------
+                    // OBJETIVO 4
+                    // ABRA AS MISSÕES
+                    //
+                    // Se o jogador conseguiu rastrear a Quest Exemplo,
+                    // obrigatoriamente ele conseguiu acessar o Quest Log.
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        tutorialId,
+                        4,
+                        'complete',
+                        true
+                    );
+
+
+                    // ---------------------------------------------------------
+                    // OBJETIVO 5
+                    // RASTREIE OUTRA MISSÃO
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        tutorialId,
+                        5,
+                        'complete',
+                        true
+                    );
+
+
+                    // ---------------------------------------------------------
+                    // OBJETIVO 6
+                    // RASTREIE O TUTORIAL
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        tutorialId,
+                        6,
+                        'activate',
+                        true
+                    );
+
+
+                    // ---------------------------------------------------------
+                    // QUEST EXEMPLO
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        exampleId,
+                        0,
+                        'complete',
+                        true
+                    );
+
+
+                    // ---------------------------------------------------------
+                    // CONCLUSÃO SILENCIOSA DA QUEST EXEMPLO
+                    // ---------------------------------------------------------
+
+                    if (
+                        window.MissaoHUD &&
+                        typeof MissaoHUD.silentComplete ===
+                        'function'
+                    ) {
+
+                        MissaoHUD.silentComplete(
+                            exampleId
+                        );
+
+                    }
+
+                    else if (
+                        typeof Galv.QUEST.complete ===
+                        'function'
+                    ) {
+
+                        Galv.QUEST.complete(
+                            exampleId,
+                            true
+                        );
+
+                    }
+
                 }
-            }
-
-            TutorialHUD.step('trackTutorial');
-        }
 
 
-            // ---------------------------------------------------------------------
-            // JOGADOR VOLTOU A RASTREAR O TUTORIAL
-        // ---------------------------------------------------------------------
-
-        else if (step === 'trackTutorial' && id === tutorialId) {
-
-            if (window.Galv && Galv.QUEST) {
-
-                Galv.QUEST.objective(
-                    tutorialId,
-                    6,
-                    'complete'
+                TutorialHUD.step(
+                    'trackTutorial'
                 );
 
-                Galv.QUEST.objective(
-                    tutorialId,
-                    7,
-                    'activate'
-                );
             }
 
-            TutorialHUD.step('finish');
-        }
 
-        TutorialHUD.refresh();
-    };
+                // =================================================================
+                // TUTORIAL VOLTOU A SER RASTREADO
+            // =================================================================
+
+            else if (
+                step === 'trackTutorial' &&
+                id === tutorialId
+            ) {
+
+                if (
+                    window.Galv &&
+                    Galv.QUEST
+                ) {
+
+                    // ---------------------------------------------------------
+                    // OBJETIVO 6
+                    // RASTREIE O TUTORIAL
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        tutorialId,
+                        6,
+                        'complete',
+                        true
+                    );
 
 
-    if (TutorialHUD.questIntegration &&
+                    // ---------------------------------------------------------
+                    // OBJETIVO 7
+                    // CONCLUA O TUTORIAL
+                    // ---------------------------------------------------------
+
+                    Galv.QUEST.objective(
+                        tutorialId,
+                        7,
+                        'activate',
+                        true
+                    );
+
+                }
+
+
+                TutorialHUD.step(
+                    'finish'
+                );
+
+            }
+
+
+            TutorialHUD.refresh();
+
+        };
+
+
+    // ========================================================================
+    // INTEGRAÇÃO COM GALV QUEST LOG
+    // ========================================================================
+
+    if (
+        TutorialHUD.questIntegration &&
         window.Galv &&
         Galv.QUEST &&
-        typeof Galv.QUEST.track === 'function') {
+        typeof Galv.QUEST.track ===
+        'function'
+    ) {
 
         var _TutorialHUD_GalvQuest_track =
             Galv.QUEST.track;
 
-        Galv.QUEST.track = function(id) {
 
-            var result =
-                _TutorialHUD_GalvQuest_track.apply(
-                    this,
-                    arguments
+        Galv.QUEST.track =
+            function(id) {
+
+                var result =
+                    _TutorialHUD_GalvQuest_track.apply(
+                        this,
+                        arguments
+                    );
+
+
+                TutorialHUD._onQuestTracked(
+                    Number(id || 0)
                 );
 
-            TutorialHUD._onQuestTracked(
-                Number(id)
-            );
 
-            return result;
-        };
+                return result;
+
+            };
+
     }
 
 
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // PLUGIN COMMANDS
-    // -------------------------------------------------------------------------
+    // ========================================================================
 
     var _TutorialHUD_GameInterpreter_pluginCommand =
         Game_Interpreter.prototype.pluginCommand;
 
+
     Game_Interpreter.prototype.pluginCommand =
-        function(command, args) {
+        function(
+            command,
+            args
+        ) {
 
             _TutorialHUD_GameInterpreter_pluginCommand.call(
                 this,
@@ -897,39 +1570,72 @@ var TutorialHUD = TutorialHUD || {};
                 args
             );
 
-            if (String(command).toUpperCase() !== 'TUTORIALHUD') {
+
+            if (
+                String(command).toUpperCase() !==
+                'TUTORIALHUD'
+            ) {
+
                 return;
+
             }
 
+
             var action =
-                String(args[0] || '').toUpperCase();
+                String(
+                    args[0] || ''
+                ).toUpperCase();
+
 
             switch (action) {
 
                 case 'START':
+
                     TutorialHUD.start();
+
                     break;
+
 
                 case 'PREPARE':
+
                     TutorialHUD.prepare();
+
                     break;
+
 
                 case 'SHOW':
+
                     TutorialHUD.show();
+
                     break;
+
 
                 case 'HIDE':
+
                     TutorialHUD.hide();
+
                     break;
+
 
                 case 'END':
+
                     TutorialHUD.end();
+
                     break;
 
+
                 case 'STEP':
-                    TutorialHUD.step(args[1] || 'movement');
+
+                    TutorialHUD.step(
+                        args[1] ||
+                        'movement'
+                    );
+
                     break;
+
             }
+
         };
+
 
 })();

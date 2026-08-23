@@ -1,81 +1,92 @@
 # TutorialHUD — RPG Maker MV
 
-Plugin desenvolvido para adicionar uma interface interativa de tutorial ao **RPG Maker MV**.
+Plugin desenvolvido para adicionar uma **interface interativa de tutorial** ao RPG Maker MV.
 
-O projeto foi criado originalmente para o jogo **Missão UAI**, desenvolvido como Trabalho de Conclusão de Curso, com o objetivo de facilitar a adaptação de jogadores que não possuem experiência prévia com jogos desenvolvidos no RPG Maker.
+O projeto foi criado originalmente para o jogo educacional **Missão UAI**, desenvolvido como Trabalho de Conclusão de Curso.
 
-A proposta do plugin é complementar os eventos normais do RPG Maker MV, fornecendo uma HUD capaz de apresentar instruções, representar visualmente os controles e reagir em tempo real às teclas pressionadas pelo jogador.
+O TutorialHUD tem como objetivo ajudar jogadores que não possuem experiência prévia com jogos desenvolvidos no RPG Maker, apresentando os controles e sistemas do jogo de maneira visual e interativa.
 
 ---
 
 ## Versão atual
 
-**v0.1.0**
+**v0.1.1**
 
-Versão inicial de desenvolvimento.
+Versão atualmente em desenvolvimento e testes.
+
+A versão 0.1.1 melhora a integração entre:
+
+- TutorialHUD;
+- MissaoHUD;
+- Galv's Quest Log.
 
 ---
 
-## Funcionalidades
+# Funcionalidades
 
 Atualmente, o TutorialHUD possui:
 
-- HUD de tutorial no canto superior esquerdo;
-- interface maior que a HUD convencional de missões;
+- HUD no canto superior esquerdo;
 - instruções diferentes para cada etapa do tutorial;
-- representação visual das teclas utilizadas;
-- destaque das teclas enquanto estão sendo pressionadas;
-- suporte a:
-    - movimentação;
-    - corrida;
-    - interação;
-    - menu;
-    - acesso às missões;
-    - rastreamento de missões;
-- integração com **Galv's Quest Log**;
-- integração com o sistema de missões utilizado pelo projeto;
-- detecção do rastreamento manual de uma missão pelo jogador;
-- suporte simultâneo ao **MissaoHUD**.
+- representação visual das teclas;
+- destaque em tempo real das teclas pressionadas;
+- tutorial de movimentação;
+- tutorial de corrida;
+- tutorial de interação;
+- tutorial de menu;
+- tutorial do sistema de missões;
+- integração com Galv's Quest Log;
+- detecção de alterações no rastreamento de missões;
+- integração com MissaoHUD;
+- suporte a uma Quest Exemplo;
+- detecção automática de que o jogador acessou o Quest Log;
+- conclusão silenciosa da Quest Exemplo.
 
 ---
 
-## Objetivo do projeto
+# Objetivo
 
-Durante testes preliminares do jogo **Missão UAI**, alguns jogadores que não possuíam familiaridade com RPG Maker MV demonstraram dificuldade em compreender os controles básicos.
+Durante testes preliminares do jogo **Missão UAI**, jogadores que não possuíam familiaridade com RPG Maker MV demonstraram dificuldades para entender alguns dos controles.
 
-O TutorialHUD foi criado para oferecer uma solução mais visual e interativa.
+O TutorialHUD foi criado para tornar esse processo mais intuitivo.
 
-Em vez de apenas apresentar uma caixa de texto explicando os controles, o plugin permite mostrar os botões na tela e reagir diretamente às entradas realizadas pelo jogador.
-
-Exemplo:
+Em vez de simplesmente mostrar:
 
 ```text
-┌─────────────────────────────────────┐
-│ MOVIMENTAÇÃO                        │
-│                                     │
-│ Use as teclas indicadas para andar. │
-│                                     │
-│              [ ↑ ]                  │
-│          [ ← ][ ↓ ][ → ]            │
-│                                     │
-└─────────────────────────────────────┘
+Use as setas para andar.
 ```
 
-Quando uma tecla é pressionada, sua representação na HUD muda visualmente.
+o plugin apresenta:
+
+```text
+┌─────────────────────────────────┐
+│ MOVIMENTAÇÃO                    │
+│                                 │
+│ Use as teclas para se mover.    │
+│                                 │
+│            [ ↑ ]                │
+│         [←][↓][→]               │
+│                                 │
+└─────────────────────────────────┘
+```
+
+Ao pressionar uma tecla, sua representação muda visualmente.
 
 ---
 
-## Dependências
+# Dependências
 
-Para utilizar todas as funcionalidades da versão atual, são utilizados:
+Para utilizar todas as funcionalidades:
 
-- **RPG Maker MV**
-- **Galv's Quest Log**
-- **MissaoHUD**
+- RPG Maker MV;
+- Galv's Quest Log;
+- MissaoHUD.
 
-O TutorialHUD deve ser colocado abaixo dos outros plugins.
+---
 
-### Ordem recomendada
+# Ordem dos plugins
+
+Utilize:
 
 ```text
 Galv_QuestLog
@@ -83,19 +94,21 @@ MissaoHUD
 TutorialHUD
 ```
 
-Isso é especialmente importante porque tanto o MissaoHUD quanto o TutorialHUD podem acompanhar alterações realizadas pelo sistema de rastreamento do Galv's Quest Log.
+O TutorialHUD deve permanecer abaixo dos outros dois.
+
+Isso permite que ele acompanhe o sistema de rastreamento já modificado pelo MissaoHUD.
 
 ---
 
-## Instalação
+# Instalação
 
-1. Baixe o arquivo:
+1. Baixe:
 
 ```text
 TutorialHUD.js
 ```
 
-2. Copie o arquivo para:
+2. Copie para:
 
 ```text
 SeuProjeto/
@@ -119,13 +132,13 @@ Ferramentas
 TutorialHUD
 ```
 
-6. Defina o status como:
+6. Ative:
 
 ```text
 ON
 ```
 
-7. Certifique-se de que a ordem esteja:
+7. Confirme a ordem:
 
 ```text
 Galv_QuestLog
@@ -135,15 +148,13 @@ TutorialHUD
 
 ---
 
-## Parâmetros
+# Parâmetros
 
-A versão atual possui os seguintes parâmetros configuráveis:
+## Largura
 
-### Largura
+Largura da HUD.
 
-Define a largura da HUD.
-
-Valor padrão:
+Padrão:
 
 ```text
 360
@@ -151,11 +162,11 @@ Valor padrão:
 
 ---
 
-### Altura
+## Altura
 
-Define a altura da HUD.
+Altura da HUD.
 
-Valor padrão:
+Padrão:
 
 ```text
 190
@@ -163,11 +174,11 @@ Valor padrão:
 
 ---
 
-### Margem
+## Margem
 
-Distância da HUD em relação às bordas da tela.
+Distância em relação às bordas da tela.
 
-Valor padrão:
+Padrão:
 
 ```text
 12
@@ -175,11 +186,11 @@ Valor padrão:
 
 ---
 
-### OpacidadeFundo
+## OpacidadeFundo
 
-Define a transparência do fundo da HUD.
+Opacidade do fundo da HUD.
 
-Valor padrão:
+Padrão:
 
 ```text
 190
@@ -187,11 +198,15 @@ Valor padrão:
 
 ---
 
-### CorDestaque
+## CorDestaque
 
-Cor utilizada em títulos, bordas e teclas pressionadas.
+Cor usada em:
 
-Valor padrão:
+- bordas;
+- títulos;
+- teclas pressionadas.
+
+Padrão:
 
 ```text
 #D99A4E
@@ -199,11 +214,11 @@ Valor padrão:
 
 ---
 
-### TutorialQuestId
+## TutorialQuestId
 
-ID da missão utilizada como tutorial.
+ID da missão principal do tutorial.
 
-Valor padrão:
+Padrão:
 
 ```text
 5
@@ -211,11 +226,11 @@ Valor padrão:
 
 ---
 
-### QuestExemploId
+## QuestExemploId
 
-ID da missão utilizada para ensinar o rastreamento de missões.
+ID da missão utilizada para ensinar o rastreamento.
 
-Valor padrão:
+Padrão:
 
 ```text
 6
@@ -223,11 +238,11 @@ Valor padrão:
 
 ---
 
-### IntegracaoQuestLog
+## IntegracaoQuestLog
 
-Ativa ou desativa a integração automática com o Galv's Quest Log.
+Habilita a integração automática com o Galv's Quest Log.
 
-Valor padrão:
+Padrão:
 
 ```text
 true
@@ -235,28 +250,98 @@ true
 
 ---
 
-# Script Calls
+# Missões usadas
 
-## Preparar o tutorial
+A implementação original utiliza:
+
+```text
+Quest 5
+Conclua o Tutorial
+```
+
+e:
+
+```text
+Quest 6
+Quest Exemplo
+```
+
+---
+
+# Objetivos da Quest 5
+
+A estrutura atualmente utilizada é:
+
+```text
+0 - Aprenda a se movimentar
+1 - Aprenda a correr
+2 - Interaja com um objeto
+3 - Abra o menu
+4 - Abra as Missões
+5 - Rastreie outra missão
+6 - Rastreie o tutorial
+7 - Conclua o Tutorial
+```
+
+Os índices começam em:
+
+```text
+0
+```
+
+---
+
+# Quest Exemplo
+
+A Quest Exemplo possui:
+
+```text
+0 - Rastreie essa missão
+```
+
+Ela existe exclusivamente para permitir que o jogador pratique a alteração da missão rastreada.
+
+---
+
+# Iniciar tutorial
+
+O principal comando é:
 
 ```javascript
 TutorialHUD.prepare();
 ```
 
-Inicializa a HUD e prepara as missões utilizadas pelo tutorial.
-
-Na configuração padrão:
+Esse comando:
 
 ```text
-Quest 5 → Conclua o Tutorial
-Quest 6 → Quest Exemplo
+Liga TutorialHUD
+        ↓
+Ativa Quest 5
+        ↓
+Ativa Quest 6
+        ↓
+Ativa objetivo 0 da Quest 5
+        ↓
+Esconde os demais objetivos
+        ↓
+Rastreia Quest 5
 ```
-
-A missão do tutorial passa a ser rastreada automaticamente.
 
 ---
 
-## Mostrar HUD
+# Iniciar apenas a HUD
+
+Para testes:
+
+```javascript
+TutorialHUD.start();
+```
+
+Isso não executa a preparação das quests.
+
+---
+
+# Mostrar
 
 ```javascript
 TutorialHUD.show();
@@ -264,7 +349,7 @@ TutorialHUD.show();
 
 ---
 
-## Ocultar HUD
+# Ocultar
 
 ```javascript
 TutorialHUD.hide();
@@ -272,31 +357,19 @@ TutorialHUD.hide();
 
 ---
 
-## Iniciar HUD
-
-```javascript
-TutorialHUD.start();
-```
-
-Inicia a HUD sem executar automaticamente a preparação das quests.
-
-Útil para testes.
-
----
-
-## Encerrar HUD
+# Encerrar
 
 ```javascript
 TutorialHUD.end();
 ```
 
-Desativa e oculta a interface.
+Utilize quando o tutorial acabar.
 
 ---
 
-# Etapas do tutorial
+# Etapas
 
-As etapas podem ser alteradas através de:
+Para alterar a etapa exibida:
 
 ```javascript
 TutorialHUD.step('ETAPA');
@@ -310,14 +383,14 @@ TutorialHUD.step('ETAPA');
 TutorialHUD.step('movement');
 ```
 
-Exibe os controles direcionais.
+Mostra:
 
 ```text
       ↑
    ←  ↓  →
 ```
 
-As teclas respondem visualmente enquanto são pressionadas.
+As teclas reagem quando pressionadas.
 
 ---
 
@@ -327,12 +400,10 @@ As teclas respondem visualmente enquanto são pressionadas.
 TutorialHUD.step('run');
 ```
 
-Apresenta:
+Mostra:
 
 ```text
-SHIFT
-+
-MOVIMENTO
+SHIFT + MOVIMENTO
 ```
 
 ---
@@ -343,7 +414,7 @@ MOVIMENTO
 TutorialHUD.step('interact');
 ```
 
-Apresenta os controles utilizados para interagir:
+Mostra:
 
 ```text
 ENTER
@@ -359,7 +430,7 @@ Z
 TutorialHUD.step('menu');
 ```
 
-Apresenta:
+Mostra:
 
 ```text
 ESC
@@ -384,26 +455,29 @@ Instrui o jogador a acessar o Diário de Missões.
 TutorialHUD.step('trackExample');
 ```
 
-Instrui o jogador a rastrear:
+Exibe:
 
 ```text
-Quest Exemplo
-```
+RASTREAR MISSÃO
 
-Quando a integração com o Galv's Quest Log está ativa, o TutorialHUD consegue reconhecer o rastreamento realizado pelo próprio jogador.
+Rastreie a missão "Quest Exemplo".
+```
 
 ---
 
-## Voltar ao Tutorial
+## Rastrear novamente o tutorial
 
 ```javascript
 TutorialHUD.step('trackTutorial');
 ```
 
-Instrui o jogador a voltar a rastrear:
+Exibe:
 
 ```text
-Conclua o Tutorial
+RASTREAR MISSÃO
+
+Volte a rastrear
+"Conclua o Tutorial".
 ```
 
 ---
@@ -414,28 +488,205 @@ Conclua o Tutorial
 TutorialHUD.step('finish');
 ```
 
-Exibe a etapa final do tutorial.
+Indica que todas as etapas didáticas foram realizadas.
 
 ---
 
-# Texto personalizado
+# Detecção do rastreamento
 
-Também é possível substituir temporariamente o título e a instrução da HUD.
-
-Exemplo:
+Uma das principais funcionalidades do TutorialHUD é observar:
 
 ```javascript
-TutorialHUD.setText(
-    'MOVIMENTAÇÃO',
-    'Vá até a mesa indicada.'
+Galv.QUEST.track(id);
+```
+
+Quando o jogador altera a missão rastreada através da própria interface do Galv's Quest Log, o TutorialHUD consegue detectar essa alteração.
+
+---
+
+# Fluxo do rastreamento
+
+Durante o tutorial:
+
+```text
+Conclua o Tutorial
+        ↓
+Abra o Menu
+        ↓
+Abra Missões
+        ↓
+Rastreie Quest Exemplo
+```
+
+Quando:
+
+```text
+Quest Exemplo
+```
+
+é rastreada, a versão 0.1.1 realiza automaticamente:
+
+```text
+✓ Abra as Missões
+✓ Rastreie outra missão
+```
+
+Isso acontece porque, se o jogador conseguiu rastrear outra missão, necessariamente conseguiu acessar o Quest Log.
+
+Depois:
+
+```text
+• Rastreie o tutorial
+```
+
+é ativado.
+
+---
+
+# Alteração da v0.1.1
+
+Na versão anterior, apenas:
+
+```text
+Rastreie outra missão
+```
+
+era marcado como concluído automaticamente.
+
+Na versão 0.1.1, o plugin também conclui:
+
+```text
+Abra as Missões
+```
+
+quando a Quest Exemplo é rastreada.
+
+Portanto:
+
+```text
+Jogador rastreia Quest Exemplo
+        ↓
+✓ Abra as Missões
+        ↓
+✓ Rastreie outra missão
+        ↓
+• Rastreie o tutorial
+```
+
+---
+
+# Integração com MissaoHUD
+
+O TutorialHUD foi projetado para funcionar ao mesmo tempo que o MissaoHUD.
+
+Disposição:
+
+```text
+TutorialHUD                         MissaoHUD
+
+┌────────────────────────┐         ┌────────────────────────┐
+│ MOVIMENTAÇÃO           │         │ MISSÃO ATUAL           │
+│                        │         │ Conclua o Tutorial     │
+│ Use as teclas...       │         │ • Aprenda a correr    │
+│                        │         └────────────────────────┘
+│       [ ↑ ]            │
+│    [←][↓][→]           │
+└────────────────────────┘
+```
+
+O TutorialHUD explica:
+
+```text
+COMO
+```
+
+realizar a ação.
+
+O MissaoHUD informa:
+
+```text
+O QUE
+```
+
+deve ser feito.
+
+---
+
+# Integração com MissaoHUD v0.3.0
+
+O MissaoHUD v0.3.0 possui:
+
+```javascript
+MissaoHUD.silentComplete(id);
+```
+
+O TutorialHUD v0.1.1 utiliza essa função para concluir a Quest Exemplo.
+
+Quando o jogador rastrear a Quest 6:
+
+```text
+Quest Exemplo
+```
+
+ela será concluída sem apresentar:
+
+```text
+MISSÃO CONCLUÍDA
+Quest Exemplo
+```
+
+Isso evita dar destaque excessivo a uma missão criada exclusivamente para fins didáticos.
+
+---
+
+# Fallback
+
+Caso o MissaoHUD não possua:
+
+```javascript
+MissaoHUD.silentComplete();
+```
+
+o TutorialHUD utiliza:
+
+```javascript
+Galv.QUEST.complete(
+    exampleId,
+    true
 );
+```
+
+Assim, a Quest Exemplo continua sendo concluída sem solicitar o popup padrão do Galv.
+
+---
+
+# Retorno ao Tutorial
+
+Depois que a Quest Exemplo for concluída, o jogador recebe a instrução:
+
+```text
+Volte a rastrear
+"Conclua o Tutorial".
+```
+
+Quando isso acontecer:
+
+```text
+✓ Rastreie o tutorial
+• Conclua o Tutorial
+```
+
+e o TutorialHUD muda para:
+
+```javascript
+TutorialHUD.step('finish');
 ```
 
 ---
 
 # Última missão rastreada
 
-Para consultar o ID da última missão detectada pelo TutorialHUD:
+É possível consultar:
 
 ```javascript
 TutorialHUD.lastTrackedQuest();
@@ -445,51 +696,70 @@ Exemplo:
 
 ```javascript
 if (TutorialHUD.lastTrackedQuest() === 6) {
-    // Quest Exemplo está sendo rastreada
+    // Quest Exemplo foi rastreada
 }
+```
+
+---
+
+# Texto personalizado
+
+Também é possível alterar manualmente o conteúdo:
+
+```javascript
+TutorialHUD.setText(
+    'MOVIMENTAÇÃO',
+    'Vá até o outro lado da sala.'
+);
 ```
 
 ---
 
 # Plugin Commands
 
-Também existem comandos que podem ser utilizados através de:
+Também estão disponíveis comandos tradicionais do RPG Maker MV.
 
-```text
-Comando de Plugin
-```
-
-### Iniciar
-
-```text
-TUTORIALHUD START
-```
-
-### Preparar tutorial
+## Preparar
 
 ```text
 TUTORIALHUD PREPARE
 ```
 
-### Mostrar
+---
+
+## Iniciar
+
+```text
+TUTORIALHUD START
+```
+
+---
+
+## Mostrar
 
 ```text
 TUTORIALHUD SHOW
 ```
 
-### Ocultar
+---
+
+## Ocultar
 
 ```text
 TUTORIALHUD HIDE
 ```
 
-### Encerrar
+---
+
+## Encerrar
 
 ```text
 TUTORIALHUD END
 ```
 
-### Alterar etapa
+---
+
+## Alterar etapa
 
 ```text
 TUTORIALHUD STEP movement
@@ -509,151 +779,130 @@ TUTORIALHUD STEP finish
 
 ---
 
-# Integração com Galv's Quest Log
-
-Uma das principais funcionalidades do TutorialHUD é acompanhar o rastreamento realizado pelo próprio jogador dentro da interface do Galv's Quest Log.
-
-Por exemplo, durante o tutorial:
-
-```text
-Conclua o Tutorial
-        ↓
-Rastreie outra missão
-        ↓
-Jogador abre o QuestLog
-        ↓
-Jogador seleciona "Quest Exemplo"
-        ↓
-TutorialHUD detecta a alteração
-```
-
-Depois, o plugin pode solicitar:
-
-```text
-Volte a rastrear "Conclua o Tutorial"
-```
-
-permitindo verificar se o jogador realmente aprendeu como utilizar o sistema.
-
----
-
-# Uso com MissaoHUD
-
-O TutorialHUD foi desenvolvido para poder permanecer ativo simultaneamente ao **MissaoHUD**.
-
-A disposição planejada é:
-
-```text
-TutorialHUD                         MissaoHUD
-
-┌────────────────────────┐         ┌────────────────────┐
-│ TUTORIAL               │         │ MISSÃO ATUAL       │
-│                        │         │ Conclua o Tutorial │
-│ Use as teclas...       │         │                    │
-│                        │         │ • Aprenda a andar  │
-│       [ ↑ ]            │         └────────────────────┘
-│    [←][↓][→]           │
-└────────────────────────┘
-
-Canto superior esquerdo             Canto superior direito
-```
-
-O TutorialHUD explica **como realizar uma ação**, enquanto o MissaoHUD continua apresentando o **objetivo atual da missão**.
-
----
-
-# Missões utilizadas no tutorial
-
-A implementação original do projeto Missão UAI utiliza:
-
-```text
-Quest 5
-Conclua o Tutorial
-```
-
-e:
-
-```text
-Quest 6
-Quest Exemplo
-```
-
-A Quest Exemplo existe apenas para permitir que o jogador pratique o sistema de rastreamento sem precisar alterar uma missão real da história.
-
----
-
-# Fluxo planejado
+# Fluxo completo planejado
 
 ```text
 Introdução
-    ↓
-Deseja realizar o tutorial?
-    ↓
-TutorialHUD
-    ↓
-Movimentação
-    ↓
-Corrida
-    ↓
-Interação
-    ↓
-Menu
-    ↓
-Missões
-    ↓
-Rastrear Quest Exemplo
-    ↓
-Rastrear novamente o Tutorial
-    ↓
+      ↓
+Deseja realizar tutorial?
+      ↓
+TutorialHUD.prepare()
+      ↓
+Quest 5 ativa
+Quest 6 ativa
+      ↓
+MOVIMENTAÇÃO
+      ↓
+CORRIDA
+      ↓
+INTERAÇÃO
+      ↓
+MENU
+      ↓
+MISSÕES
+      ↓
+RASTREIE QUEST EXEMPLO
+      ↓
+✓ Abra as Missões
+✓ Rastreie outra missão
+      ↓
+Quest Exemplo concluída silenciosamente
+      ↓
+RASTREIE O TUTORIAL
+      ↓
+✓ Rastreie o tutorial
+      ↓
+CONCLUA O TUTORIAL
+      ↓
 Tutorial concluído
-    ↓
-Início normal do jogo
 ```
+
+---
+
+# Histórico de versões
+
+## v0.1.1
+
+### Adicionado
+
+- conclusão automática do objetivo `Abra as Missões` ao rastrear a Quest Exemplo;
+- integração com `MissaoHUD.silentComplete()`;
+- fallback de conclusão silenciosa através do Galv's Quest Log;
+- documentação do fluxo de integração.
+
+### Alterado
+
+- fluxo de rastreamento da Quest Exemplo;
+- documentação;
+- comentários internos do plugin.
+
+---
+
+## v0.1.0
+
+Primeira versão.
+
+### Adicionado
+
+- HUD interativa;
+- teclas direcionais;
+- feedback visual de entrada;
+- etapa de corrida;
+- etapa de interação;
+- etapa de menu;
+- etapa de missões;
+- integração com Galv's Quest Log;
+- detecção do rastreamento de quests;
+- suporte ao MissaoHUD.
 
 ---
 
 # Roadmap
 
-## v0.1.0
+## v0.1.1
 
-- [x] Estrutura inicial da HUD
-- [x] HUD no canto superior esquerdo
-- [x] Detecção das teclas direcionais
-- [x] Feedback visual das teclas pressionadas
-- [x] Etapa de movimentação
-- [x] Etapa de corrida
-- [x] Etapa de interação
-- [x] Etapa de menu
-- [x] Etapa de missões
-- [x] Integração inicial com Galv's Quest Log
-- [x] Detecção de missão rastreada
-- [x] Compatibilidade planejada com MissaoHUD
+- [x] HUD básica;
+- [x] movimentação;
+- [x] corrida;
+- [x] interação;
+- [x] menu;
+- [x] missões;
+- [x] Quest Exemplo;
+- [x] detecção do rastreamento;
+- [x] detectar implicitamente acesso ao Quest Log;
+- [x] integração com MissaoHUD;
+- [x] conclusão silenciosa da Quest Exemplo;
+- [ ] teste completo do tutorial dentro do RPG Maker MV;
+- [ ] validação completa do fluxo Quest 5 → Quest 6 → Quest 5.
 
 ---
 
 ## Próximas versões
 
-- [ ] adicionar opção **Controles** ao menu;
-- [ ] permitir visualizar os controles fora do tutorial;
-- [ ] adicionar esquema de movimentação por **WASD**;
-- [ ] permitir alternar entre **Setas** e **WASD**;
-- [ ] salvar preferência do jogador;
-- [ ] adicionar configuração através do `ConfigManager`;
-- [ ] melhorar animações da HUD;
-- [ ] adicionar transições suaves entre etapas;
-- [ ] melhorar feedback visual de conclusão;
-- [ ] estudar suporte a remapeamento personalizado de teclas;
-- [ ] ampliar integração com sistemas de tutorial baseados em eventos.
+- [ ] botão `Controles` no menu;
+- [ ] suporte a WASD;
+- [ ] alternância Setas ↔ WASD;
+- [ ] salvar preferência de controles;
+- [ ] remapeamento de teclas;
+- [ ] animações de entrada e saída;
+- [ ] transições suaves entre etapas;
+- [ ] melhorias visuais;
+- [ ] consulta dos controles fora do tutorial;
+- [ ] maior integração com o menu do jogo.
 
 ---
 
 # Estado do projeto
 
-O TutorialHUD ainda está em desenvolvimento.
+O TutorialHUD continua em desenvolvimento.
 
-A API, parâmetros e funcionamento interno podem sofrer alterações durante as próximas versões.
+A versão:
 
-A versão atual foi criada inicialmente para testes dentro do projeto **Missão UAI**.
+```text
+v0.1.1
+```
+
+deve ser considerada uma versão de testes até que todo o fluxo do mapa Tutorial seja validado.
 
 ---
 
@@ -661,4 +910,4 @@ A versão atual foi criada inicialmente para testes dentro do projeto **Missão 
 
 **Gustavo Pestana**
 
-Projeto desenvolvido para RPG Maker MV como parte do desenvolvimento do jogo educacional **Missão UAI**.
+Plugin desenvolvido para RPG Maker MV como parte do desenvolvimento do jogo educacional **Missão UAI**.
