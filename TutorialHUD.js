@@ -2036,5 +2036,170 @@ var TutorialHUD = TutorialHUD || {};
 
         };
 
+    TutorialHUD.movementMode = 'arrows';
 
+    var _tutorialOriginalKeys = {
+        65: Input.keyMapper[65], // A
+        68: Input.keyMapper[68], // D
+        83: Input.keyMapper[83], // S
+        87: Input.keyMapper[87]  // W
+    };
+
+    TutorialHUD.canChangeMovement = function() {
+        var id = TutorialHUD.completeSwitch;
+        var completed = id > 0 &&
+            typeof $gameSwitches !== 'undefined' &&
+            $gameSwitches && $gameSwitches.value(id);
+
+        // Se a HUD do tutorial estiver ativa e visível,
+        // o jogador ainda está executando as instruções.
+        var inTutorial = typeof $gameSystem !== 'undefined' &&
+            $gameSystem &&
+            $gameSystem._tutorialHudActive &&
+            $gameSystem._tutorialHudVisible;
+
+        return !!completed && !inTutorial;
+    };
+
+    TutorialHUD.effectiveMovementMode = function() {
+        return TutorialHUD.canChangeMovement() &&
+        ConfigManager.tutorialMovementMode === 'wasd'
+            ? 'wasd' : 'arrows';
+    };
+
+    TutorialHUD.applyMovementMode = function() {
+        [65, 68, 83, 87].forEach(function(code) {
+            if (_tutorialOriginalKeys[code] === undefined) {
+                delete Input.keyMapper[code];
+            } else {
+                Input.keyMapper[code] = _tutorialOriginalKeys[code];
+            }
+        });
+
+        if (TutorialHUD.effectiveMovementMode() === 'wasd') {
+            Input.keyMapper[87] = 'up';
+            Input.keyMapper[65] = 'left';
+            Input.keyMapper[83] = 'down';
+            Input.keyMapper[68] = 'right';
+        }
+        Input.clear();
+    };
+
+    ConfigManager.tutorialMovementMode = 'arrows';
+
+    var _tutorialConfigMakeData = ConfigManager.makeData;
+    ConfigManager.makeData = function() {
+        var data = _tutorialConfigMakeData.call(this);
+        data.tutorialMovementMode = this.tutorialMovementMode;
+        return data;
+    };
+
+    var _tutorialConfigApplyData = ConfigManager.applyData;
+    ConfigManager.applyData = function(data) {
+        _tutorialConfigApplyData.call(this, data);
+        this.tutorialMovementMode = data &&
+        data.tutorialMovementMode === 'wasd' ? 'wasd' : 'arrows';
+        TutorialHUD.applyMovementMode();
+    };
+
+    TutorialHUD.toggleMovementMode = function() {
+        if (!TutorialHUD.canChangeMovement()) {
+            SoundManager.playBuzzer();
+            return false;
+        }
+        ConfigManager.tutorialMovementMode =
+            ConfigManager.tutorialMovementMode === 'wasd'
+                ? 'arrows' : 'wasd';
+        TutorialHUD.applyMovementMode();
+        ConfigManager.save();
+        return true;
+    };
+
+    // Reaplicar a configuração ao entrar no mapa (novo jogo, load, retorno).
+    var _tutorialMovementSceneMapStart = Scene_Map.prototype.start;
+    Scene_Map.prototype.start = function() {
+        _tutorialMovementSceneMapStart.call(this);
+        TutorialHUD.applyMovementMode();
+    };
+
+    // Atualizar quando o switch "Tutorial Completo" mudar.
+    var _tutorialMovementSwitchSetValue = Game_Switches.prototype.setValue;
+    Game_Switches.prototype.setValue = function(id, value) {
+        _tutorialMovementSwitchSetValue.call(this, id, value);
+        if (id === TutorialHUD.completeSwitch) {
+            TutorialHUD.applyMovementMode();
+        }
+    };
+
+    // O HUD original não muda; só bloqueia WASD durante sua execução.
+    ['start', 'show', 'hide', 'end'].forEach(function(name) {
+        var previous = TutorialHUD[name];
+        TutorialHUD[name] = function() {
+            var result = previous.apply(this, arguments);
+            TutorialHUD.applyMovementMode();
+            return result;
+        };
+    });
+
+    // Evita que o ENTER que abre "Controles" também altere o modo.
+    var _tutorialControlsInit = Window_TutorialControls.prototype.initialize;
+    Window_TutorialControls.prototype.initialize = function() {
+        _tutorialControlsInit.apply(this, arguments);
+        this._movementInputDelay = 10;
+    };
+
+    Window_TutorialControls.prototype.update = function() {
+        Window_Base.prototype.update.call(this);
+        if (this._movementInputDelay > 0) {
+            this._movementInputDelay--;
+            return;
+        }
+        if (Input.isTriggered('cancel')) {
+            SoundManager.playCancel();
+            SceneManager.pop();
+            return;
+        }
+        if (Input.isTriggered('ok')) {
+            if (TutorialHUD.toggleMovementMode()) {
+                SoundManager.playOk();
+                this.refresh();
+                this._movementInputDelay = 8;
+            }
+        }
+    };
+
+    // Preserva todo o desenho atual; substitui apenas a área de movimentação
+    // e a instrução do rodapé, sem alterar a HUD de tutorial.
+    var _tutorialControlsRefresh = Window_TutorialControls.prototype.refresh;
+    Window_TutorialControls.prototype.refresh = function() {
+        _tutorialControlsRefresh.call(this);
+
+        var wasd = TutorialHUD.effectiveMovementMode() === 'wasd';
+        var width = this.contents.width;
+        var height = this.contents.height;
+
+        // Área original: título e as quatro setas.
+        this.contents.clearRect(40, 78, 322, 126);
+        this.drawControlTitle('Movimentação - ' + (wasd ? 'WASD' : 'SETAS'),
+            45, 80, 315);
+        this.drawKeyBox(wasd ? 'W' : '↑', 125, 120, 45);
+        this.drawKeyBox(wasd ? 'A' : '←', 75, 163, 45);
+        this.drawKeyBox(wasd ? 'S' : '↓', 125, 163, 45);
+        this.drawKeyBox(wasd ? 'D' : '→', 175, 163, 45);
+
+        // Rodapé: inclui como alternar sem mover o restante do layout.
+        this.contents.clearRect(0, height - 54, width, 48);
+        this.contents.fontSize = 15;
+        this.changeTextColor('#BBBBBB');
+        this.drawText(
+            TutorialHUD.canChangeMovement()
+                ? 'ENTER / Z / ESPAÇO: alternar  |  ESC / X: voltar'
+                : 'Conclua o tutorial para liberar a troca dos controles',
+            0, height - 48, width, 'center'
+        );
+        this.resetTextColor();
+    };
+
+    // No início do jogo, até que o switch seja ON, sempre usar as setas.
+    TutorialHUD.applyMovementMode();
 })();
